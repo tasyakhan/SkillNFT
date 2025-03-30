@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skill NFT Marketplace</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f6f9;
+        }
+        .nft-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Create Skill NFT</h2>
+        <input type="text" id="nftName" placeholder="Your Professional Name">
+        <input type="text" id="skillsList" placeholder="Skills (comma separated)">
+        <button onclick="createSkillNFT()">Create Skill NFT</button>
+    </div>
+
+    <div class="container">
+        <h2>Endorse Skill NFT</h2>
+        <input type="number" id="endorseNFTId" placeholder="NFT ID to Endorse">
+        <button onclick="endorseSkillNFT()">Endorse</button>
+    </div>
+
+    <div class="container">
+        <h2>Transfer Skill NFT</h2>
+        <input type="number" id="transferNFTId" placeholder="NFT ID to Transfer">
+        <input type="text" id="transferTo" placeholder="Recipient Principal">
+        <button onclick="transferSkillNFT()">Transfer</button>
+    </div>
+
+    <div class="container">
+        <h2>My Skill NFTs</h2>
+        <input type="text" id="userPrincipal" placeholder="Your Principal ID">
+        <button onclick="getUserSkillNFTs()">Show My NFTs</button>
+        <div id="nftsList"></div>
+    </div>
+
+    <script type="module">
+        import { backend } from 'declarations/backend';
+
+const SkillNFT = backend;
+        // Fungsi membuat Skill NFT
+        window.createSkillNFT = async () => {
+            const name = document.getElementById('nftName').value;
+            const skillsInput = document.getElementById('skillsList').value;
+            const skills = skillsInput.split(',').map(skill => skill.trim());
+
+            try {
+                const result = await SkillNFT.createSkillNFT(name, skills);
+                if (result.ok) {
+                    alert(`Skill NFT created with ID: ${result.ok}`);
+                } else {
+                    alert(`Error: ${result.err}`);
+                }
+            } catch (error) {
+                console.error('NFT creation failed:', error);
+            }
+        };
+
+        // Fungsi endorse NFT
+        window.endorseSkillNFT = async () => {
+            const nftId = parseInt(document.getElementById('endorseNFTId').value);
+
+            try {
+                const result = await SkillNFT.endorseSkillNFT(nftId);
+                if (result.ok) {
+                    alert(`NFT endorsed. Total endorsements: ${result.ok.endorsements}`);
+                } else {
+                    alert(`Error: ${result.err}`);
+                }
+            } catch (error) {
+                console.error('Endorsement failed:', error);
+            }
+        };
+
+        // Fungsi transfer NFT
+        window.transferSkillNFT = async () => {
+            const nftId = parseInt(document.getElementById('transferNFTId').value);
+            const to = document.getElementById('transferTo').value;
+
+            try {
+                const result = await SkillNFT.transferSkillNFT(nftId, to);
+                if (result.ok) {
+                    alert('NFT transferred successfully');
+                } else {
+                    alert(`Error: ${result.err}`);
+                }
+            } catch (error) {
+                console.error('Transfer failed:', error);
+            }
+        };
+
+        // Fungsi dapatkan NFT pengguna
+        window.getUserSkillNFTs = async () => {
+            const userPrincipal = document.getElementById('userPrincipal').value;
+            const nftsList = document.getElementById('nftsList');
+            nftsList.innerHTML = '';
+
+            try {
+                const nfts = await SkillNFT.getUserSkillNFTs(userPrincipal);
+                nfts.forEach(nft => {
+                    const nftDiv = document.createElement('div');
+                    nftDiv.className = 'nft-card';
+                    nftDiv.innerHTML = `
+                        <h3>NFT ID: ${nft.id}</h3>
+                        <p>Name: ${nft.name}</p>
+                        <p>Skills: ${nft.skills.join(', ')}</p>
+                        <p>Endorsements: ${nft.endorsements}</p>
+                    `;
+                    nftsList.appendChild(nftDiv);
+                });
+            } catch (error) {
+                console.error('Failed to fetch NFTs:', error);
+            }
+        };
+    </script>
+</body>
+</html>
